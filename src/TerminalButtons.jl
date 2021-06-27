@@ -26,48 +26,48 @@ using TerminalUserInterfaces: Terminal, Buffer, Rect, Block,
 
 
 Base.@kwdef mutable struct Button
-	text::String = "OK"
-	rect::Rect = Rect()
-	style::Crayon = crayon"fg:white bg:blue"
-	selected::Bool = false
+    text::String = "OK"
+    rect::Rect = Rect()
+    style::Crayon = crayon"fg:white bg:blue"
+    selected::Bool = false
     f::Function = ()->nothing
 end
 Button(text) = Button(;text = text)
 
 
 function draw(b::Button, buf::Buffer)
-	x = b.rect.x + ((b.rect.width - length(b.text)) ÷ 2)
-	y = b.rect.y + b.rect.height ÷ 2
+    x = b.rect.x + ((b.rect.width - length(b.text)) ÷ 2)
+    y = b.rect.y + b.rect.height ÷ 2
     set(buf, x, y, b.text)
-	background(buf, b.rect, b.style)
-	if b.selected
-		draw(Block(;border_style = b.style), b.rect, buf)
-	end
+    background(buf, b.rect, b.style)
+    if b.selected
+        draw(Block(;border_style = b.style), b.rect, buf)
+    end
 end
 
 
 function draw(b::Button, area::Rect, buf::Buffer)
-	b.rect = area
-	draw(b, buf)
+    b.rect = area
+    draw(b, buf)
 end
 
 
 function draw(buttons::Vector{Button}, rect::Rect, buf::Buffer)
 
-	background(buf, rect, crayon"bg:dark_gray")
+    background(buf, rect, crayon"bg:dark_gray")
 
-	l = length(buttons)
-	button_w = (rect.width - (l-1)) ÷ l
-	err = rect.width - (l-1) - (l * button_w)
+    l = length(buttons)
+    button_w = (rect.width - (l-1)) ÷ l
+    err = rect.width - (l-1) - (l * button_w)
 
-	x = rect.x
+    x = rect.x
 
-	for b in buttons
-		w = button_w + (err > 0 ? 1 : 0)
-		err -= 1
+    for b in buttons
+        w = button_w + (err > 0 ? 1 : 0)
+        err -= 1
         draw(b, Rect(x, rect.y, w - 1, rect.height), buf)
-		x += w + 1
-	end
+        x += w + 1
+    end
 end
 
 
@@ -76,16 +76,16 @@ contains(r::Rect, x, y) = x >= left(r) && x <= right(r) &&
 
 
 function select(buttons::Vector{Button}, x, y)
-	for b in buttons
-		b.selected = false
-	end
-	for b in buttons
-		if contains(b.rect, x, y)
-			b.selected = true
+    for b in buttons
+        b.selected = false
+    end
+    for b in buttons
+        if contains(b.rect, x, y)
+            b.selected = true
             b.f()
-			return b
-		end
-	end
+            return b
+        end
+    end
     return nothing
 end
 
@@ -123,9 +123,9 @@ function choose_button(t, buttons; rect=nothing)
     end
 
     # Draw buttons.
-	buttons = Button.(buttons)
-	draw(t, buttons, rect)
-	flush(t)
+    buttons = Button.(buttons)
+    draw(t, buttons, rect)
+    flush(t)
 
     result = nothing
     while result == nothing
@@ -145,7 +145,7 @@ function choose_button(t, buttons; rect=nothing)
         flush(t)
     end
 
-	return result.text
+    return result.text
 end
 
 
