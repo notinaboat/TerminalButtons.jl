@@ -6,7 +6,7 @@ Create simple touch screen interfaces without X11.
 
 Uses [LinuxTouchEvents.jl](https://github.com/notinaboat/LinuxTouchEvents.jl) to get touch screen input (e.g from a [Raspberry Pi Touch Display](https://www.raspberrypi.org/documentation/hardware/display/README.md)).
 
-Uses [Terming.jl](https://github.com/foldfelis/Terming.jl) and [Crayons.jl(https://github.com/KristofferC/Crayons.jl) to draw buttons.
+Uses [Terming.jl](https://github.com/foldfelis/Terming.jl) and [Crayons.jl](https://github.com/KristofferC/Crayons.jl) to draw buttons.
 
 ![](buttons.png)
 
