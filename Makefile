@@ -5,3 +5,6 @@ all: README.md
 README.md: src/$(PACKAGE).jl
 	julia --project -e "using $(PACKAGE); \
 		                println($(PACKAGE).readme())" > $@
+
+jl:
+	julia --project

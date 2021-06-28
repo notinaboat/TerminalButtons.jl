@@ -5,5 +5,5 @@ version = "0.1.0"
 
 [deps]
 Crayons = "a8cc5b0e-0ffa-5ad4-8c14-923d3ee1735f"
+Terming = "5a1048b7-9ca6-4e8a-8e2e-1f932e78ac4e"
 LinuxTouchEvents = "47506264-cfa6-4ce7-b091-1fe6ecfeb671"
-TerminalUserInterfaces = "408767e4-586b-40c7-9657-f9758988469a"
