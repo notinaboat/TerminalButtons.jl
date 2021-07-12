@@ -151,7 +151,7 @@ end
 
 
 """
-    choose_button([id => button, ...]; vertical=false) -> selected_button
+    choose_button(io, [id => button, ...]; vertical=false) -> selected_button
 
 Draw a selection of buttons and wait for one of them to be pressed.
 
@@ -166,7 +166,7 @@ e.g.
         ...
     end
 """
-function choose_button(buttons; vertical=false, rect=nothing)
+function choose_button(io, buttons; vertical=false, rect=nothing)
 
     screen_h, screen_w = Terming.displaysize()
 
@@ -175,7 +175,7 @@ function choose_button(buttons; vertical=false, rect=nothing)
             rect = Rect(1, 1, screen_w, screen_h)
         else
             # Draw buttons across the bottom of the screen by default.
-            button_h = 5
+            button_h = 3
             rect = Rect(1, screen_h  + 1 - button_h, screen_w, button_h)
         end
     end
@@ -183,9 +183,9 @@ function choose_button(buttons; vertical=false, rect=nothing)
     # Draw buttons.
     buttons = [Button(id, text) for (id, text) in buttons]
     if vertical
-        render_vertical(stdout, buttons, rect)
+        render_vertical(io, buttons, rect)
     else
-        render_horizontal(stdout, buttons, rect)
+        render_horizontal(io, buttons, rect)
     end
 
     # Wait for touch event.
@@ -196,7 +196,7 @@ function choose_button(buttons; vertical=false, rect=nothing)
         y = round(Int, y * screen_h)
 
         # Select button at touch location.
-        result = select_button(stdout, buttons, (x, y))
+        result = select_button(io, buttons, (x, y))
         if result != nothing
             close(c)
             return result.id
@@ -204,8 +204,11 @@ function choose_button(buttons; vertical=false, rect=nothing)
     end
 end
 
-choose_button(v::Vector{String}; kw...) =
-    choose_button([x => x for x in v]; kw...)
+choose_button(io, v::Vector{String}; kw...) =
+    choose_button(io, [x => x for x in v]; kw...)
+
+choose_button(io, v::Vector{Pair{String,Function}}; kw...) =
+    choose_button(io, [f => s for (s, f) in v]; kw...)()
 
 
 # Documentation.
