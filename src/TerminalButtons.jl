@@ -18,6 +18,8 @@ module TerminalButtons
 
 using LinuxTouchEvents
 using Crayons
+using UnixIO
+using UnixIO.Debug
 using Terming
 
 
@@ -166,10 +168,16 @@ e.g.
         ...
     end
 """
-function choose_button(io, buttons; vertical=false, rect=nothing)
+@db function choose_button(io, buttons;
+                           vertical=false, rect=nothing, size=nothing)
 
-    screen_h, screen_w = Terming.displaysize()
-
+    if size == nothing 
+        size = UnixIO.tiocgwinsz(io)
+        screen_h, screen_w = size.ws_row, size.ws_col
+    else
+        screen_h, screen_w = size
+    end
+                                                        @db 3 screen_h screen_w
     if rect == nothing
         if vertical
             rect = Rect(1, 1, screen_w, screen_h)
@@ -189,7 +197,7 @@ function choose_button(io, buttons; vertical=false, rect=nothing)
     end
 
     # Wait for touch event.
-    c = TouchEventChannel()
+    c = TouchEventChannel()                                            ;@db 3 c
     while true
         x, y = take!(c)
         x = round(Int, x * screen_w)
@@ -199,7 +207,7 @@ function choose_button(io, buttons; vertical=false, rect=nothing)
         result = select_button(io, buttons, (x, y))
         if result != nothing
             close(c)
-            return result.id
+            @db return result.id
         end
     end
 end
