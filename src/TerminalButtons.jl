@@ -151,6 +151,31 @@ function select_button(io, buttons::Vector{Button}, touch)
     return nothing
 end
 
+struct XTermEventChannel
+    w::Int
+    h::Int
+    function XTermEventChannel(w, h)
+        Terming.raw!(true)
+        print("\e[?1000h");
+        return new(w, h)
+    end
+end
+
+function Base.take!(t::XTermEventChannel)
+    while true
+        x = Terming.read_stream()
+        if startswith(x, "\e[M")
+            v = map(x->Int(x)-32, codeunits(x[4:end]))
+            return v[1], v[2]/t.w, v[3]/t.h
+        end
+    end
+end
+
+function Base.close(t::XTermEventChannel)
+    print("\e[?1000l");
+    Terming.raw!(false)
+end
+
 
 """
     choose_button(io, [id => button, ...]; vertical=false) -> selected_button
@@ -197,7 +222,8 @@ e.g.
     end
 
     # Wait for touch event.
-    c = TouchEventChannel()                                            ;@db 3 c
+    c = Sys.islinux() ? TouchEventChannel() :
+                        XTermEventChannel(screen_w, screen_h)          ;@db 3 c
     while true
         x, y = take!(c)
         x = round(Int, x * screen_w)
