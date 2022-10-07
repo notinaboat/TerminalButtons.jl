@@ -194,7 +194,8 @@ e.g.
     end
 """
 @db function choose_button(io, buttons;
-                           vertical=false, rect=nothing, size=nothing)
+                           vertical=false, rect=nothing, size=nothing,
+                           touch_in=nothing)
 
     if size == nothing 
         size = UnixIO.tiocgwinsz(io)
@@ -222,17 +223,25 @@ e.g.
     end
 
     # Wait for touch event.
-    c = Sys.islinux() ? TouchEventChannel() :
+    c = touch_in != nothing ? touch_in :
+        Sys.islinux() ? TouchEventChannel() :
                         XTermEventChannel(screen_w, screen_h)          ;@db 3 c
     while true
-        x, y = take!(c)
+        event = take!(c)
+        if length(event) == 3 # FIXME
+            event, x, y = event
+        else
+            x, y = event
+        end
         x = round(Int, x * screen_w)
         y = round(Int, y * screen_h)
 
         # Select button at touch location.
         result = select_button(io, buttons, (x, y))
         if result != nothing
-            close(c)
+            if touch_in == nothing
+                close(c)
+            end
             @db return result.id
         end
     end
