@@ -161,6 +161,8 @@ struct XTermEventChannel
     end
 end
 
+Base.isready(t::XTermEventChannel; timeout=0) = true
+
 function Base.take!(t::XTermEventChannel)
     while true
         x = Terming.read_stream()
