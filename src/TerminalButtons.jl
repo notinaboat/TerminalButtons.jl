@@ -154,16 +154,34 @@ end
 struct XTermEventChannel
     w::Int
     h::Int
+    buffer::Channel{Any}
     function XTermEventChannel(w, h)
         Terming.raw!(true)
         print("\e[?1000h");
-        return new(w, h)
+        return new(w, h, Channel{Any}(1))
     end
 end
 
-Base.isready(t::XTermEventChannel; timeout=0) = true
+function Base.isready(t::XTermEventChannel; timeout=0)
+    if isempty(t.buffer)
+        x = UInt8[0]
+        readbytes!(Terming.in_stream, x, 1)
+        if x[1] != 0
+            x = String(x) * Terming.read_stream()
+            if startswith(x, "\e[M")
+                v = map(x->Int(x)-32, codeunits(x[4:end]))
+                put!(t.buffer, (v[1], v[2]/t.w, v[3]/t.h))
+            end
+        end
+    end
+
+    return isready(t.buffer)
+end
 
 function Base.take!(t::XTermEventChannel)
+    if isready(t.buffer)
+        return take!(t.buffer)
+    end
     while true
         x = Terming.read_stream()
         if startswith(x, "\e[M")
