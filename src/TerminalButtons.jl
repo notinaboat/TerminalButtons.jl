@@ -154,20 +154,22 @@ end
 struct XTermEventChannel
     w::Int
     h::Int
+    in::UnixIO.FD
+    out::UnixIO.FD
     buffer::Channel{Any}
-    function XTermEventChannel(w, h)
-        Terming.raw!(true)
-        print("\e[?1000h");
-        return new(w, h, Channel{Any}(1))
+    function XTermEventChannel(in, out, w, h)
+        @assert UnixIO.ispt(in) || UnixIO.iscanon(in)
+        print(out, "\e[?1000h");
+        return new(w, h, in, out, Channel{Any}(1))
     end
 end
 
 function Base.isready(t::XTermEventChannel; timeout=0)
+    print(t.out, "\e[?1000h");
     if isempty(t.buffer)
-        x = UInt8[0]
-        readbytes!(Terming.in_stream, x, 1)
-        if x[1] != 0
-            x = String(x) * Terming.read_stream()
+        x = UnixIO.readavailable(t.in)
+        if !isempty(x)
+            x = String(x)
             if startswith(x, "\e[M")
                 v = map(x->Int(x)-32, codeunits(x[4:end]))
                 put!(t.buffer, (v[1], v[2]/t.w, v[3]/t.h))
@@ -179,15 +181,11 @@ function Base.isready(t::XTermEventChannel; timeout=0)
 end
 
 function Base.take!(t::XTermEventChannel)
-    if isready(t.buffer)
-        return take!(t.buffer)
-    end
     while true
-        x = Terming.read_stream()
-        if startswith(x, "\e[M")
-            v = map(x->Int(x)-32, codeunits(x[4:end]))
-            return v[1], v[2]/t.w, v[3]/t.h
+        if isready(t)
+            return take!(t.buffer)
         end
+        Base.@lock t.in wait(t.in)
     end
 end
 
