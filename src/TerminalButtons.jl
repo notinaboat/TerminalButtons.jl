@@ -167,8 +167,13 @@ end
 function Base.isready(t::XTermEventChannel; timeout=0)
     print(t.out, "\e[?1000h");
     if isempty(t.buffer)
-        x = UnixIO.readavailable(t.in)
-        if !isempty(x)
+        #x = UnixIO.readavailable(t.in)
+        x = zeros(UInt8, 6)
+        n = UnixIO.read(t.in, x; timeout=0)
+        if n > 0 && n != 6
+            @error "Short read from XTermEventChannel!"
+        end
+        if n > 0
             x = String(x)
             if startswith(x, "\e[M")
                 v = map(x->Int(x)-32, codeunits(x[4:end]))
