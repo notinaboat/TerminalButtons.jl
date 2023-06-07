@@ -169,7 +169,7 @@ function Base.isready(t::XTermEventChannel; timeout=0)
     if isempty(t.buffer)
         #x = UnixIO.readavailable(t.in)
         x = zeros(UInt8, 6)
-        n = UnixIO.read(t.in, x; timeout=0)
+        n = UnixIO.read(t.in, x; timeout)
         if n > 0 && n != 6
             @error "Short read from XTermEventChannel!"
         end
